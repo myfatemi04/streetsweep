@@ -1,0 +1,6 @@
+STREETSWEEP
+===========
+Significant sources:
+ * Generic Mobile Object Detection Model (https://github.com/ibaiGorordo/TFLite-Mobile-Generic-Object-Localizer/blob/main/genericDetector/genericDetector.py)
+
+No other significant sources were used in the final product.
