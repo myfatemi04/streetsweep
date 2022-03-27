@@ -123,7 +123,41 @@ class GenericDetector():
         return image
 
 
-def detect_and_annotate(frame):
+def get_object_bounding_boxes(frame):
+    detections = detector(frame)
+
+    img_height, img_width, _ = frame.shape
+
+    bounding_boxes = []
+    for detection in detections:
+        box = detection['bounding_box']
+        y1 = (img_height * box[0]).astype(int)
+        y2 = (img_height * box[2]).astype(int)
+        x1 = (img_width * box[1]).astype(int)
+        x2 = (img_width * box[3]).astype(int)
+
+        cropped = frame[y1:y2, x1:x2]
+        if min(cropped.shape) > 0:
+            bounding_boxes.append(((x1, y1), (x2, y2)))
+
+    return bounding_boxes
+
+
+def get_class_likelihoods(image):
+    if type(image) == np.ndarray:
+        image = Image.fromarray(image)
+    elif type(image) == Image:
+        pass
+    else:
+        print(f'Image type not supported: {type(image)}.')
+
+    batch = torch.stack([preprocess(image)]).float()
+    likelihoods = torch.softmax(model(batch), dim=1)
+
+    return likelihoods
+
+
+def detect_and_annotate(frame):  # , allowed_class_ids):
     detections = detector(frame)
 
     img_height, img_width, _ = frame.shape
@@ -160,13 +194,19 @@ def detect_and_annotate(frame):
     return detection_img
 
 
+def get_imagenet_categories():
+    # Read the categories
+    with open("imagenet_classes.txt", "r") as f:
+        categories = [s.strip() for s in f.readlines()]
+
+    return categories
+
+
 if __name__ == '__main__':
     model_path = 'object_detection_mobile_object_localizer_v1_1_default_1.tflite'
     threshold = 0.2
 
     detector = GenericDetector(model_path, threshold)
-
-    cap = cv2.VideoCapture(0)
 
     import torch
     from torchvision import transforms
@@ -183,9 +223,7 @@ if __name__ == '__main__':
                              0.229, 0.224, 0.225]),
     ])
 
-    # Read the categories
-    with open("imagenet_classes.txt", "r") as f:
-        categories = [s.strip() for s in f.readlines()]
+    categories = get_imagenet_categories()
 
     # image = Image.open("dog.jpeg")
 
@@ -197,6 +235,25 @@ if __name__ == '__main__':
     #     print(categories[top5_catid[i]], top5_prob[i].item())
 
     # exit()
+
+    # garbage_classes = [
+    #     'beer bottle',
+    #     'bottlecap',
+    #     'beer glass',
+    #     'water bottle',
+    #     'plastic bag',
+    # ]
+
+    # garbage_class_ids = [categories.index(c) for c in garbage_classes]
+
+    image = cv2.imread('img.png')
+
+    cv2.imshow("Image", detect_and_annotate(image))  # , garbage_class_ids))
+    cv2.waitKey(0)
+
+    exit()
+
+    cap = cv2.VideoCapture(0)
 
     with torch.no_grad():
         while True:
