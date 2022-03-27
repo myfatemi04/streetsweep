@@ -60,10 +60,8 @@ def submit_photo(lat, lng):
     file = request.files['file']
     file.save(f'./uploads/{upload_counter}.jpg')
 
-    upload_counter += 1
-
     # Perform inference.
-    image = cv2.imread(f'./uploads/{upload_counter - 1}.jpg')
+    image = cv2.imread(f'./uploads/{upload_counter}.jpg')
 
     all_likelihoods = []
     bounding_boxes = get_object_bounding_boxes(image)
@@ -76,7 +74,7 @@ def submit_photo(lat, lng):
             colors[idx, 0]), int(colors[idx, 1]), int(colors[idx, 2])), 5)
 
     # Save an annotated version of the image.
-    cv2.imwrite(f'./annotations/{upload_counter - 1}.jpg', image)
+    cv2.imwrite(f'./annotations/{upload_counter}.jpg', image)
 
     submissions.append({
         'id': upload_counter,
@@ -85,6 +83,8 @@ def submit_photo(lat, lng):
         'class_likelihoods': [L.tolist() for L in all_likelihoods],
         'timestamp': int(round(time.time() * 1000))  # milliseconds
     })
+
+    upload_counter += 1
 
     return "Success"
 
