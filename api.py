@@ -24,15 +24,15 @@ def submit_photo():
     if 'file' not in request.files:
         return "No file part"
 
-    if 'lat' not in request.form or 'lon' not in request.form:
+    if 'lat' not in request.form or 'lng' not in request.form:
         return "Location was undefined"
 
     lat = request.form['lat']
-    lon = request.form['lon']
+    lng = request.form['lng']
 
     try:
         lat = float(lat)
-        lon = float(lon)
+        lng = float(lng)
     except:
         return "Location was NaN"
 
@@ -56,7 +56,7 @@ def submit_photo():
 
     submissions.append({
         'lat': lat,
-        'lon': lon,
+        'lng': lng,
         'class_likelihoods': class_likelihoods.tolist(),
     })
 
