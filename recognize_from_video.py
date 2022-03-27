@@ -156,7 +156,7 @@ def get_class_likelihoods(image):
     batch = torch.stack([preprocess(image)]).float()
     likelihoods = torch.softmax(model(batch), dim=1)
 
-    return likelihoods
+    return likelihoods[0]
 
 
 def detect_and_annotate(frame):  # , allowed_class_ids):

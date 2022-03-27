@@ -1,10 +1,14 @@
 import flask
+from flask_cors import CORS, cross_origin
 import cv2
 
 from recognize_from_video import get_class_likelihoods, get_imagenet_categories, get_object_bounding_boxes
 
 app = flask.Flask(__name__)
+app.config['SECRET_KEY'] = 'the quick brown fox jumps over the lazy   dog'
+app.config['CORS_HEADERS'] = 'Content-Type'
 
+cors = CORS(app, resources={'/submissions': {'origins': '*'}})
 
 upload_counter = 0
 categories = get_imagenet_categories()
@@ -16,19 +20,13 @@ def index():
     return "You have reached the StreetSweep API endpoint."
 
 
-@app.route("/submit_photo", methods=["POST"])
-def submit_photo():
+@app.route("/submit_photo/<lat>,<lng>", methods=["POST"])
+def submit_photo(lat, lng):
     global upload_counter
 
     request = flask.request
     if 'file' not in request.files:
         return "No file part"
-
-    if 'lat' not in request.form or 'lng' not in request.form:
-        return "Location was undefined"
-
-    lat = request.form['lat']
-    lng = request.form['lng']
 
     try:
         lat = float(lat)
@@ -49,21 +47,24 @@ def submit_photo():
     # Perform inference.
     image = cv2.imread(f'./uploads/{upload_counter - 1}.jpg')
 
+    all_likelihoods = []
     bounding_boxes = get_object_bounding_boxes(image)
     for ((x1, y1), (x2, y2)) in bounding_boxes:
         cropped_object = image[y1:y2, x1:x2]
         class_likelihoods = get_class_likelihoods(cropped_object)
+        all_likelihoods.append(class_likelihoods)
 
     submissions.append({
         'lat': lat,
         'lng': lng,
-        'class_likelihoods': class_likelihoods.tolist(),
+        'class_likelihoods': [L.tolist() for L in all_likelihoods],
     })
 
     return "Success"
 
 
 @app.route("/submissions", methods=["GET"])
+@cross_origin(origin='localhost', headers=['Content-Type', 'Authorization'])
 def get_submissions():
     return flask.jsonify(submissions)
 
