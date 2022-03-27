@@ -18,6 +18,8 @@ def index():
 
 @app.route("/submit_photo", methods=["POST"])
 def submit_photo():
+    global upload_counter
+
     request = flask.request
     if 'file' not in request.files:
         return "No file part"
@@ -33,6 +35,11 @@ def submit_photo():
         lon = float(lon)
     except:
         return "Location was NaN"
+
+    import os
+
+    if not os.path.exists('./uploads'):
+        os.mkdir('./uploads')
 
     file = request.files['file']
     file.save(f'./uploads/{upload_counter}.jpg')

@@ -1,3 +1,5 @@
+from torchvision import transforms
+import torch
 import time
 import cv2
 import numpy as np
@@ -202,26 +204,26 @@ def get_imagenet_categories():
     return categories
 
 
+model_path = 'object_detection_mobile_object_localizer_v1_1_default_1.tflite'
+threshold = 0.2
+
+detector = GenericDetector(model_path, threshold)
+
+model = torch.hub.load('pytorch/vision:v0.10.0',
+                       'resnet101', pretrained=True)
+# Apparently, this is a really necessary line
+model.eval()
+
+preprocess = transforms.Compose([
+    transforms.Resize(256),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+        0.229, 0.224, 0.225]),
+])
+
+
 if __name__ == '__main__':
-    model_path = 'object_detection_mobile_object_localizer_v1_1_default_1.tflite'
-    threshold = 0.2
-
-    detector = GenericDetector(model_path, threshold)
-
-    import torch
-    from torchvision import transforms
-    model = torch.hub.load('pytorch/vision:v0.10.0',
-                           'resnet101', pretrained=True)
-    # Apparently, this is a really necessary line
-    model.eval()
-
-    preprocess = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
-                             0.229, 0.224, 0.225]),
-    ])
 
     categories = get_imagenet_categories()
 
