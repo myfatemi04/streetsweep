@@ -1,6 +1,7 @@
 import flask
 from flask_cors import CORS, cross_origin
 import cv2
+import time
 
 from recognize_from_video import get_class_likelihoods, get_imagenet_categories, get_object_bounding_boxes
 
@@ -55,9 +56,11 @@ def submit_photo(lat, lng):
         all_likelihoods.append(class_likelihoods)
 
     submissions.append({
+        'id': upload_counter,
         'lat': lat,
         'lng': lng,
         'class_likelihoods': [L.tolist() for L in all_likelihoods],
+        'timestamp': int(round(time.time() * 1000))  # milliseconds
     })
 
     return "Success"
